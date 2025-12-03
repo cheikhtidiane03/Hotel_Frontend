@@ -1,128 +1,191 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom'; 
-import CreateHotelForm from '../components/hotels/CreateHotelForm';
+import { useParams, useNavigate } from 'react-router-dom';
 
-// ✅ CORRECTION DU STYLE : Ajout de alignItems: 'center'
-const pageStyle = { 
-    display: 'flex', 
-    justifyContent: 'center', // Centre horizontalement
-    alignItems: 'center',     // ✅ Centre verticalement
-    minHeight: '100vh', 
-    backgroundColor: '#f4f4f4',
-    padding: '40px 0' 
-};
-
-// La classe 'container' de Bootstrap s'occupera d'aligner le bloc de contenu au milieu
-const contentStyle = { 
-    width: '100%', 
-    maxWidth: '1200px', // Garde une largeur maximale pour ne pas étirer l'information
-};
-
+/**
+ * Page affichant les détails d'un hôtel et permettant sa modification/suppression.
+ */
 export default function HotelDetailsPage({ hotels, onUpdate, onDelete, onSuccess }) {
     const { id } = useParams();
     const navigate = useNavigate();
-    const hotelId = parseInt(id);
     
-    const initialHotel = hotels.find(h => h.id === hotelId);
-    
+    // Trouver l'hôtel correspondant
+    const hotel = hotels.find(h => h.id === parseInt(id));
+
+    // Initialiser les données de formulaire avec les données de l'hôtel trouvé
+    const [formData, setFormData] = useState({
+        name: '',
+        city: '',
+        country: '',
+        rooms_count: 0,
+        rating: 0,
+        description: '',
+    });
     const [isEditing, setIsEditing] = useState(false);
-    const [currentHotel, setCurrentHotel] = useState(initialHotel);
+    const [deleteConfirmation, setDeleteConfirmation] = useState(false);
 
-    // Redirection si l'hôtel n'est pas trouvé
     useEffect(() => {
-        if (!initialHotel) {
-            navigate('/hotels');
-            onSuccess("Hôtel non trouvé.");
+        if (hotel) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
+            setFormData({
+                name: hotel.name,
+                city: hotel.city,
+                country: hotel.country,
+                rooms_count: hotel.rooms_count || 0,
+                rating: hotel.rating || 0,
+                description: hotel.description || '',
+            });
         }
-    }, [initialHotel, navigate, onSuccess]);
+    }, [hotel]);
 
-    if (!currentHotel) {
-        return <div style={pageStyle}>Chargement...</div>;
+    if (!hotel) {
+        return <div className="alert alert-warning">Hôtel non trouvé. <Link to="/hotels">Retour à la liste.</Link></div>;
     }
 
-    const handleUpdate = (updatedData) => {
-        const updatedHotel = { ...currentHotel, ...updatedData };
+    const handleChange = (e) => {
+        let { name, value, type } = e.target;
+        
+        if (type === 'number') {
+            value = parseFloat(value);
+        }
+
+        setFormData(prev => ({
+            ...prev,
+            [name]: value
+        }));
+    };
+
+    const handleUpdate = (e) => {
+        e.preventDefault();
+        
+        const updatedHotel = {
+            ...hotel,
+            ...formData,
+            // S'assurer que les nombres sont stockés comme des nombres
+            rooms_count: parseInt(formData.rooms_count),
+            rating: parseFloat(formData.rating),
+            updated_at: new Date().toISOString(),
+        };
+
         onUpdate(updatedHotel);
-        setCurrentHotel(updatedHotel);
+        onSuccess(`L'hôtel ${updatedHotel.name} a été mis à jour.`);
         setIsEditing(false);
-        onSuccess(`Hôtel "${updatedHotel.name}" mis à jour avec succès !`);
     };
 
     const handleDelete = () => {
-        if (window.confirm(`Êtes-vous sûr de vouloir supprimer l'hôtel "${currentHotel.name}" ?`)) {
-            onDelete(currentHotel.id);
-            navigate('/hotels');
-            onSuccess(`Hôtel "${currentHotel.name}" a été supprimé !`);
-        }
+        onDelete(hotel.id);
+        onSuccess(`L'hôtel ${hotel.name} a été supprimé.`);
+        navigate('/hotels'); // Redirige vers la liste après suppression
     };
 
-    const formattedPrice = new Intl.NumberFormat('fr-FR', {
-        style: 'currency',
-        currency: currentHotel.currency || 'XOF',
-    }).format(currentHotel.price);
-
-
     return (
-        <div style={pageStyle}>
-            {/* L'utilisation de className="container" ou "container-fluid" et de style={contentStyle}
-                permet de garantir que le contenu est bien centré dans le flex parent. */}
-            <div style={contentStyle} className="container"> 
-                
-                <div className="bg-white rounded shadow-lg p-5">
-                    <h1 className="h2 fw-bold text-dark mb-4 border-bottom pb-2">
-                        {isEditing ? 'Modification de' : 'Détails de'} : {currentHotel.name}
-                    </h1>
+        <div className="container-fluid">
+            <nav aria-label="breadcrumb" className="mb-4">
+                <ol className="breadcrumb">
+                    <li className="breadcrumb-item"><Link to="/">Dashboard</Link></li>
+                    <li className="breadcrumb-item"><Link to="/hotels">Gestion des Hôtels</Link></li>
+                    <li className="breadcrumb-item active" aria-current="page">{hotel.name}</li>
+                </ol>
+            </nav>
 
-                    {/* Boutons d'Action */}
-                    <div className="d-flex justify-content-end mb-4">
-                        {!isEditing && (
-                            <button className="btn btn-warning me-3" onClick={() => setIsEditing(true)}>
-                                Modifier
-                            </button>
-                        )}
-                        <button className="btn btn-danger" onClick={handleDelete}>
-                            Supprimer
+            <div className="card shadow-lg">
+                <div className="card-header bg-danger text-white d-flex justify-content-between align-items-center">
+                    <h4 className="mb-0 fw-bold">{hotel.name}</h4>
+                    <div>
+                        <button 
+                            className={`btn btn-sm me-2 fw-bold ${isEditing ? 'btn-light text-danger' : 'btn-outline-light'}`}
+                            onClick={() => setIsEditing(!isEditing)}
+                        >
+                            <i className={`fas me-1 ${isEditing ? 'fa-times' : 'fa-edit'}`}></i> {isEditing ? 'Annuler' : 'Modifier'}
                         </button>
-                        <button className="btn btn-secondary ms-3" onClick={() => navigate('/hotels')}>
-                            ← Retour à la liste
+                        
+                        <button 
+                            className="btn btn-sm btn-outline-light fw-bold"
+                            onClick={() => setDeleteConfirmation(true)}
+                            disabled={isEditing}
+                        >
+                            <i className="fas fa-trash me-1"></i> Supprimer
                         </button>
                     </div>
-                    
-                    {isEditing ? (
-                        // --- MODE ÉDITION ---
-                        <CreateHotelForm 
-                            onSave={handleUpdate}
-                            onClose={() => setIsEditing(false)} 
-                            initialData={currentHotel} 
-                        />
-                    ) : (
-                        // --- MODE AFFICHAGE ---
-                        <div className="row">
-                            <div className="col-md-7 mb-4">
-                                <img 
-                                    src={currentHotel.imageUrl} 
-                                    alt={currentHotel.name} 
-                                    className="img-fluid rounded shadow-sm" 
-                                    style={{ maxHeight: '400px', objectFit: 'cover', width: '100%' }}
-                                />
-                                <h4 className="mt-4 border-bottom pb-2">Description:</h4>
-                                <p>{currentHotel.description || "Aucune description détaillée n'est disponible pour cet hôtel."}</p>
+                </div>
+                
+                <div className="card-body">
+                    <form onSubmit={handleUpdate}>
+                        
+                        <div className="row mb-3">
+                            <div className="col-md-6">
+                                <label className="form-label fw-bold">Nom</label>
+                                <input type="text" className="form-control" name="name" value={formData.name} onChange={handleChange} disabled={!isEditing} required />
                             </div>
-                            <div className="col-md-5">
-                                <div className="card shadow-sm p-4 bg-light">
-                                    <h4 className="border-bottom pb-2 mb-3">Informations Clés</h4>
-                                    <p><strong>Ville:</strong> {currentHotel.city}</p>
-                                    <p><strong>Adresse:</strong> {currentHotel.address || 'Non spécifiée'}</p>
-                                    <p><strong>Prix par nuit:</strong> <span className="text-danger fw-bold fs-5">{formattedPrice}</span></p>
-                                    <hr />
-                                    <p><strong>Email:</strong> {currentHotel.email || 'Non spécifié'}</p>
-                                    <p><strong>Téléphone:</strong> {currentHotel.phone || 'Non spécifié'}</p>
-                                </div>
+                            <div className="col-md-6">
+                                <label className="form-label fw-bold">ID (Lecture seule)</label>
+                                <input type="text" className="form-control" value={hotel.id} disabled />
                             </div>
                         </div>
-                    )}
+
+                        <div className="row mb-3">
+                            <div className="col-md-4">
+                                <label className="form-label fw-bold">Ville</label>
+                                <input type="text" className="form-control" name="city" value={formData.city} onChange={handleChange} disabled={!isEditing} required />
+                            </div>
+                            <div className="col-md-4">
+                                <label className="form-label fw-bold">Pays</label>
+                                <input type="text" className="form-control" name="country" value={formData.country} onChange={handleChange} disabled={!isEditing} required />
+                            </div>
+                            <div className="col-md-4">
+                                <label className="form-label fw-bold">Chambres</label>
+                                <input type="number" className="form-control" name="rooms_count" min="1" value={formData.rooms_count} onChange={handleChange} disabled={!isEditing} required />
+                            </div>
+                        </div>
+                        
+                        <div className="row mb-3">
+                            <div className="col-md-4">
+                                <label className="form-label fw-bold">Note (1.0 - 5.0)</label>
+                                <input type="number" className="form-control" name="rating" step="0.1" min="1.0" max="5.0" value={formData.rating} onChange={handleChange} disabled={!isEditing} required />
+                            </div>
+                            <div className="col-md-4">
+                                <label className="form-label fw-bold">Créé le</label>
+                                <input type="text" className="form-control" value={new Date(hotel.created_at || hotel.id).toLocaleDateString()} disabled />
+                            </div>
+                            <div className="col-md-4">
+                                <label className="form-label fw-bold">Mis à jour le</label>
+                                <input type="text" className="form-control" value={hotel.updated_at ? new Date(hotel.updated_at).toLocaleDateString() : 'Jamais'} disabled />
+                            </div>
+                        </div>
+
+                        <div className="mb-4">
+                            <label className="form-label fw-bold">Description</label>
+                            <textarea className="form-control" name="description" rows="3" value={formData.description} onChange={handleChange} disabled={!isEditing}></textarea>
+                        </div>
+                        
+                        {isEditing && (
+                            <button type="submit" className="btn btn-danger fw-bold">
+                                Enregistrer les Modifications
+                            </button>
+                        )}
+                    </form>
                 </div>
             </div>
+            
+            {/* Modal de Confirmation de Suppression */}
+            {deleteConfirmation && (
+                <div className="modal d-block" tabIndex="-1" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+                    <div className="modal-dialog modal-dialog-centered">
+                        <div className="modal-content">
+                            <div className="modal-header bg-danger text-white">
+                                <h5 className="modal-title">Confirmation de Suppression</h5>
+                                <button type="button" className="btn-close btn-close-white" onClick={() => setDeleteConfirmation(false)}></button>
+                            </div>
+                            <div className="modal-body">
+                                Êtes-vous sûr de vouloir supprimer l'hôtel <strong>{hotel.name}</strong> ? Cette action est irréversible.
+                            </div>
+                            <div className="modal-footer">
+                                <button type="button" className="btn btn-secondary" onClick={() => setDeleteConfirmation(false)}>Annuler</button>
+                                <button type="button" className="btn btn-danger fw-bold" onClick={handleDelete}>Supprimer Définitivement</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
