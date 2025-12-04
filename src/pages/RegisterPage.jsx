@@ -1,6 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 
+// Définition des classes de couleur
+const PRIMARY_COLOR_CLASS = 'success'; // Vert foncé (bouton principal)
+const ACCENT_COLOR_CLASS = 'info';    // Sauge/Vert clair (accents/bordure)
+
 // ------------------------------------------------------------------
 // Composant : Aperçu de l'image (Gère le Fichier et l'URL)
 // ------------------------------------------------------------------
@@ -43,7 +47,8 @@ const PhotoPreview = ({ url, onFileChange, onUrlChange }) => {
         margin: '0 auto', 
         borderRadius: '50%',
         overflow: 'hidden',
-        border: `3px dashed ${previewUrl ? '#dc3545' : '#ced4da'}`, 
+        // ✅ CHANGEMENT ICI : Utilisation de la couleur ACCENT_COLOR_CLASS pour la bordure (info/sauge)
+        border: `3px dashed ${previewUrl ? '#198754' : '#ced4da'}`, // '#198754' est la couleur par défaut de success
         backgroundColor: '#e9ecef',
         marginBottom: '20px',
         cursor: 'pointer', 
@@ -70,12 +75,11 @@ const PhotoPreview = ({ url, onFileChange, onUrlChange }) => {
                 />
             </div>
             
-            {/* Champ pour COLER une URL (visuel) */}
             <div className="mb-3 w-100" style={{ maxWidth: '300px' }}>
                 <input 
                     type="url" 
                     name="photoUrl" 
-                    placeholder="Coller l'URL de l'image ici"
+                    // placeholder="Coller l'URL de l'image ici"
                     value={url} 
                     onChange={onUrlChange} 
                     className="form-control form-control-sm text-center"
@@ -111,6 +115,8 @@ export default function RegisterPage({ onRegister }) {
             }));
         } else {
              // Ceci est appelé par le composant enfant si l'URL est entrée manuellement
+             // Note: Si onFileChange est appelé sans fichier (handleUrlChange dans l'input text),
+             // le composant enfant peut passer l'URL directement.
             setFormData(prev => ({ 
                 ...prev, 
                 photoFile: null, 
@@ -118,6 +124,16 @@ export default function RegisterPage({ onRegister }) {
             }));
         }
     };
+
+    const handleUrlChange = (e) => {
+        // Gère spécifiquement le changement de l'input d'URL
+        setFormData(prev => ({ 
+            ...prev, 
+            photoUrl: e.target.value,
+            photoFile: null // Annule le fichier si l'utilisateur saisit une URL
+        }));
+    };
+
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -131,7 +147,7 @@ export default function RegisterPage({ onRegister }) {
         const result = onRegister(formData);
 
         if (result.success) {
-            // ✅ Redirige vers la page de CONNEXION après inscription
+            // Redirige vers la page de CONNEXION après inscription
             navigate('/login'); 
         } else {
             setError(result.message);
@@ -141,16 +157,22 @@ export default function RegisterPage({ onRegister }) {
     return (
         <div className="d-flex justify-content-center align-items-center min-vh-100 bg-light">
             <div className="bg-white rounded shadow-lg p-5" style={{ width: '100%', maxWidth: '450px' }}>
-                <h2 className="h4 text-center text-dark fw-bold mb-4 border-bottom pb-2">Créer un Compte</h2>
+                {/* ✅ CHANGEMENT : Titre harmonisé */}
+                <h2 className={`h4 text-center text-${PRIMARY_COLOR_CLASS} fw-bold mb-4 border-bottom pb-2`}>
+                    <i className={`fas fa-user-plus me-2 text-${ACCENT_COLOR_CLASS}`}></i> Créer un Compte
+                </h2>
+                
                 <form onSubmit={handleSubmit}>
                     
+                    {/* Le style alert-danger est conservé pour les messages d'erreur */}
                     {error && <div className="alert alert-danger small">{error}</div>}
                     
                     <PhotoPreview 
                         url={formData.photoUrl} 
-                        // Note: handlePhotoChange gère le fichier et l'URL visible
+                        // onFileChange gère le fichier sélectionné
                         onFileChange={(file, tempUrl) => handlePhotoChange(file, tempUrl)}
-                        onUrlChange={handleChange}
+                        // onUrlChange gère l'input text pour coller l'URL
+                        onUrlChange={handleUrlChange}
                     />
 
                     {/* Nom et Prénom */}
@@ -173,11 +195,16 @@ export default function RegisterPage({ onRegister }) {
                         <input type="password" name="password" placeholder="Mot de passe" value={formData.password} onChange={handleChange} className="form-control" required />
                     </div>
                     
-                    <button type="submit" className="btn btn-danger w-100 fw-bold mt-2">S'inscrire</button>
+                    {/* ✅ CHANGEMENT : Bouton en PRIMARY_COLOR_CLASS (Vert foncé) */}
+                    <button type="submit" className={`btn btn-${PRIMARY_COLOR_CLASS} w-100 fw-bold mt-2`}>
+                         <i className="fas fa-user-plus me-2"></i> S'inscrire
+                    </button>
                 </form>
 
                 <p className="text-center small mt-3">
-                    Déjà un compte ? <Link to="/login" className="text-danger fw-medium">Se connecter</Link>
+                    Déjà un compte ? 
+                    {/* ✅ CHANGEMENT : Lien en PRIMARY_COLOR_CLASS (Vert foncé) */}
+                    <Link to="/login" className={`text-${PRIMARY_COLOR_CLASS} fw-medium`}>Se connecter</Link>
                 </p>
             </div>
         </div>

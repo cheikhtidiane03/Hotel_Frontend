@@ -24,7 +24,7 @@ export default function Sidebar({ onLogout, currentUser }) {
             {/* Logo/Titre principal du Dashboard */}
             <Link className="d-flex align-items-center mb-4 text-white text-decoration-none border-bottom pb-3" to="/">
                 <i className="fas fa-bed me-2 fs-5"></i>
-                <span className="fs-5 fw-bold">ADMIN PANEL</span>
+                <span className="fs-5 fw-bold">HOTEL</span>
             </Link>
 
             {/* Liens de Navigation */}

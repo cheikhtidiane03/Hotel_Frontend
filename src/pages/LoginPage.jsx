@@ -1,6 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 
+// Définition des classes de couleur
+const PRIMARY_COLOR_CLASS = 'success'; // Vert foncé (bouton principal)
+const ACCENT_COLOR_CLASS = 'info';    // Sauge/Vert clair (accents/liens)
+
 export default function LoginPage({ onLogin }) {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -27,10 +31,15 @@ export default function LoginPage({ onLogin }) {
     };
 
     return (
-        // ✅ Centrage horizontal et vertical (min-vh-100 nécessite le CSS global dans App.jsx)
+        // ✅ Centrage horizontal et vertical (min-vh-100 est correct)
         <div className="d-flex justify-content-center align-items-center min-vh-100 bg-light"> 
+            {/* Carte de Connexion */}
             <div className="bg-white rounded shadow-lg p-5" style={{ width: '100%', maxWidth: '380px' }}>
-                <h2 className="h4 text-center text-dark fw-bold mb-4 border-bottom pb-2">Connexion</h2>
+                
+                <h2 className={`h4 text-center fw-bold mb-4 border-bottom pb-2 text-${PRIMARY_COLOR_CLASS}`}>
+                    <i className="fas fa-lock me-2 text-${ACCENT_COLOR_CLASS}"></i> Connexion
+                </h2>
+                
                 <form onSubmit={handleSubmit}>
                     
                     {error && <div className="alert alert-danger small">{error}</div>}
@@ -58,14 +67,20 @@ export default function LoginPage({ onLogin }) {
                     </div>
 
                     <div className="d-flex justify-content-end mb-3">
-                        <Link to="/login/forgot" className="small text-danger">Mot de passe oublié ?</Link>
+                        {/* Utilisation de la couleur ACCENT_COLOR_CLASS pour le lien */}
+                        <Link to="/login/forgot" className={`small text-${ACCENT_COLOR_CLASS} fw-medium`}>Mot de passe oublié ?</Link>
                     </div>
 
-                    <button type="submit" className="btn btn-danger w-100 fw-bold">Se connecter</button>
+                    {/* Utilisation de la couleur PRIMARY_COLOR_CLASS pour le bouton */}
+                    <button type="submit" className={`btn btn-${PRIMARY_COLOR_CLASS} w-100 fw-bold`}>
+                        <i className="fas fa-sign-in-alt me-2"></i> Se connecter
+                    </button>
                 </form>
 
                 <p className="text-center small mt-3">
-                    Pas encore de compte ? <Link to="/register" className="text-danger fw-medium">Créer un compte</Link>
+                    Pas encore de compte ? 
+                    {/* Utilisation de la couleur PRIMARY_COLOR_CLASS pour le lien */}
+                    <Link to="/register" className={`text-${PRIMARY_COLOR_CLASS} fw-medium`}>Créer un compte</Link>
                 </p>
             </div>
         </div>
