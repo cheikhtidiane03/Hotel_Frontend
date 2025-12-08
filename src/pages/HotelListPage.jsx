@@ -297,42 +297,42 @@ function FiltersPanel({ filters, onFilterChange, onClearFilters }) {
  * 📊 Composant de Statistiques
  */
 function StatsDisplay({ total, filtered, averageRating, totalRooms }) {
-    // return (
-    //     <div className="row mb-4">
-    //         <div className="col-md-3 col-6 mb-3">
-    //             <div className="card border-0 shadow-sm">
-    //                 <div className="card-body text-center">
-    //                     <h6 className="text-muted mb-2">Total Hôtels</h6>
-    //                     <h3 className={`text-${PRIMARY_COLOR_CLASS} fw-bold`}>{total}</h3>
-    //                 </div>
-    //             </div>
-    //         </div>
-    //         <div className="col-md-3 col-6 mb-3">
-    //             <div className="card border-0 shadow-sm">
-    //                 <div className="card-body text-center">
-    //                     <h6 className="text-muted mb-2">Hôtels Filtrés</h6>
-    //                     <h3 className="text-info fw-bold">{filtered}</h3>
-    //                 </div>
-    //             </div>
-    //         </div>
-    //         <div className="col-md-3 col-6 mb-3">
-    //             <div className="card border-0 shadow-sm">
-    //                 <div className="card-body text-center">
-    //                     <h6 className="text-muted mb-2">Note Moyenne</h6>
-    //                     <h3 className="text-warning fw-bold">{averageRating} ⭐</h3>
-    //                 </div>
-    //             </div>
-    //         </div>
-    //         <div className="col-md-3 col-6 mb-3">
-    //             <div className="card border-0 shadow-sm">
-    //                 <div className="card-body text-center">
-    //                     <h6 className="text-muted mb-2">Chambres Total</h6>
-    //                     <h3 className="text-success fw-bold">{totalRooms}</h3>
-    //                 </div>
-    //             </div>
-    //         </div>
-    //     </div>
-    // );
+    return (
+        <div className="row mb-4">
+            <div className="col-md-3 col-6 mb-3">
+                <div className="card border-0 shadow-sm">
+                    <div className="card-body text-center">
+                        <h6 className="text-muted mb-2">Total Hôtels</h6>
+                        <h3 className={`text-${PRIMARY_COLOR_CLASS} fw-bold`}>{total}</h3>
+                    </div>
+                </div>
+            </div>
+            <div className="col-md-3 col-6 mb-3">
+                <div className="card border-0 shadow-sm">
+                    <div className="card-body text-center">
+                        <h6 className="text-muted mb-2">Hôtels Filtrés</h6>
+                        <h3 className="text-info fw-bold">{filtered}</h3>
+                    </div>
+                </div>
+            </div>
+            <div className="col-md-3 col-6 mb-3">
+                <div className="card border-0 shadow-sm">
+                    <div className="card-body text-center">
+                        <h6 className="text-muted mb-2">Note Moyenne</h6>
+                        <h3 className="text-warning fw-bold">{averageRating} ⭐</h3>
+                    </div>
+                </div>
+            </div>
+            <div className="col-md-3 col-6 mb-3">
+                <div className="card border-0 shadow-sm">
+                    <div className="card-body text-center">
+                        <h6 className="text-muted mb-2">Chambres Total</h6>
+                        <h3 className="text-success fw-bold">{totalRooms}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
 }
 
 /**
