@@ -21,7 +21,7 @@ const Layout = ({ onLogout, currentUser, onSearch }) => {
                     onLogout={onLogout} 
                     currentUser={currentUser} 
                     onSearch={onSearch} 
-                    title="Dashboard Hôtelier"
+                    title="Dashboard"
                 />
                 <main style={{ padding: '20px' }}>
                     <Outlet />

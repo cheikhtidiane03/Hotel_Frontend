@@ -32,7 +32,7 @@ export default function Header({ title, currentUser, onLogout, onSearch }) {
                 <h1 className="h4 fw-bold text-dark">{title}</h1>
             ) : (
                 <Link className={`navbar-brand fw-bold text-${PRIMARY_COLOR_CLASS}`} to="/dashboard">
-                    <i className="fas fa-hotel me-2"></i> GESTION HÔTELIÈRE
+                    <i className="fas fa-hotel me-2"></i> HotelAdmin
                 </Link>
             )}
             

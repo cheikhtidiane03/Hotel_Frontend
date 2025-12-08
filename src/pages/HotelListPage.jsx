@@ -1,7 +1,8 @@
 // src/pages/HotelListPage.jsx
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
+import { Search, Filter, X } from 'lucide-react';
 
 // La couleur "verte/sauge" sera représentée ici par 'success' (boutons) et 'info' (fonds/accents)
 const PRIMARY_COLOR_CLASS = 'success'; 
@@ -99,6 +100,242 @@ function HotelCard({ hotel, getRatingInfo }) {
 }
 
 /**
+ * 🔍 Composant de Barre de Recherche
+ */
+function SearchBar({ onSearch, value = '' }) {
+    const [searchTerm, setSearchTerm] = useState(value);
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        onSearch(searchTerm);
+    };
+
+    const handleClear = () => {
+        setSearchTerm('');
+        onSearch('');
+    };
+
+    return (
+        <form onSubmit={handleSubmit} className="w-100">
+            <div className="input-group">
+                <span className="input-group-text bg-white border-end-0">
+                    <Search size={18} className="text-muted" />
+                </span>
+                <input
+                    type="text"
+                    className="form-control border-start-0"
+                    placeholder="Rechercher un hôtel par nom, ville, pays..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                />
+                {searchTerm && (
+                    <button
+                        type="button"
+                        className="btn btn-outline-secondary border-start-0"
+                        onClick={handleClear}
+                    >
+                        <X size={16} />
+                    </button>
+                )}
+                <button 
+                    type="submit" 
+                    className={`btn btn-${PRIMARY_COLOR_CLASS}`}
+                >
+                    Rechercher
+                </button>
+            </div>
+        </form>
+    );
+}
+
+/**
+ * ⚙️ Composant de Filtres
+ */
+function FiltersPanel({ filters, onFilterChange, onClearFilters }) {
+    const cities = useMemo(() => {
+        // Extraire les villes uniques des hôtels
+        return Array.from(new Set(filters.allHotels.map(h => h.city))).sort();
+    }, [filters.allHotels]);
+
+    const countries = useMemo(() => {
+        // Extraire les pays uniques des hôtels
+        return Array.from(new Set(filters.allHotels.map(h => h.country))).sort();
+    }, [filters.allHotels]);
+
+    const ratingOptions = [
+        { value: 0, label: 'Toutes notes' },
+        { value: 4.5, label: '4.5+ ⭐' },
+        { value: 4.0, label: '4.0+ ⭐' },
+        { value: 3.5, label: '3.5+ ⭐' },
+        { value: 3.0, label: '3.0+ ⭐' },
+    ];
+
+    const sortOptions = [
+        { value: 'newest', label: 'Plus récent' },
+        { value: 'name_asc', label: 'Nom (A-Z)' },
+        { value: 'name_desc', label: 'Nom (Z-A)' },
+        { value: 'rating_desc', label: 'Note décroissante' },
+        { value: 'rooms_desc', label: 'Chambres décroissantes' },
+    ];
+
+    return (
+        <div className="card shadow-sm mb-4">
+            <div className="card-header bg-light d-flex justify-content-between align-items-center">
+                <h6 className="mb-0">
+                    <Filter size={18} className="me-2" />
+                    Filtres et Tri
+                </h6>
+                {(filters.selectedCities.length > 0 || filters.selectedCountries.length > 0 || filters.minRating > 0) && (
+                    <button
+                        onClick={onClearFilters}
+                        className="btn btn-sm btn-outline-danger"
+                    >
+                        Réinitialiser
+                    </button>
+                )}
+            </div>
+            <div className="card-body">
+                <div className="row g-3">
+                    {/* Filtre par Ville */}
+                    <div className="col-md-6">
+                        <label className="form-label fw-semibold">Ville</label>
+                        <div className="d-flex flex-wrap gap-2">
+                            {cities.map(city => (
+                                <button
+                                    key={city}
+                                    type="button"
+                                    onClick={() => {
+                                        const newCities = filters.selectedCities.includes(city)
+                                            ? filters.selectedCities.filter(c => c !== city)
+                                            : [...filters.selectedCities, city];
+                                        onFilterChange({ ...filters, selectedCities: newCities });
+                                    }}
+                                    className={`btn btn-sm ${filters.selectedCities.includes(city)
+                                        ? `btn-${PRIMARY_COLOR_CLASS}`
+                                        : 'btn-outline-secondary'
+                                    }`}
+                                >
+                                    {city}
+                                    {filters.selectedCities.includes(city) && (
+                                        <X size={12} className="ms-1" />
+                                    )}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Filtre par Pays */}
+                    <div className="col-md-6">
+                        <label className="form-label fw-semibold">Pays</label>
+                        <div className="d-flex flex-wrap gap-2">
+                            {countries.map(country => (
+                                <button
+                                    key={country}
+                                    type="button"
+                                    onClick={() => {
+                                        const newCountries = filters.selectedCountries.includes(country)
+                                            ? filters.selectedCountries.filter(c => c !== country)
+                                            : [...filters.selectedCountries, country];
+                                        onFilterChange({ ...filters, selectedCountries: newCountries });
+                                    }}
+                                    className={`btn btn-sm ${filters.selectedCountries.includes(country)
+                                        ? `btn-${PRIMARY_COLOR_CLASS}`
+                                        : 'btn-outline-secondary'
+                                    }`}
+                                >
+                                    {country}
+                                    {filters.selectedCountries.includes(country) && (
+                                        <X size={12} className="ms-1" />
+                                    )}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Filtre par Note */}
+                    <div className="col-md-6">
+                        <label className="form-label fw-semibold">Note minimale</label>
+                        <div className="d-flex flex-wrap gap-2">
+                            {ratingOptions.map(option => (
+                                <button
+                                    key={option.value}
+                                    type="button"
+                                    onClick={() => onFilterChange({ ...filters, minRating: option.value })}
+                                    className={`btn btn-sm ${filters.minRating === option.value
+                                        ? `btn-${PRIMARY_COLOR_CLASS}`
+                                        : 'btn-outline-secondary'
+                                    }`}
+                                >
+                                    {option.label}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Tri */}
+                    <div className="col-md-6">
+                        <label className="form-label fw-semibold">Trier par</label>
+                        <select
+                            className="form-select"
+                            value={filters.sortBy}
+                            onChange={(e) => onFilterChange({ ...filters, sortBy: e.target.value })}
+                        >
+                            {sortOptions.map(option => (
+                                <option key={option.value} value={option.value}>
+                                    {option.label}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+/**
+ * 📊 Composant de Statistiques
+ */
+function StatsDisplay({ total, filtered, averageRating, totalRooms }) {
+    // return (
+    //     <div className="row mb-4">
+    //         <div className="col-md-3 col-6 mb-3">
+    //             <div className="card border-0 shadow-sm">
+    //                 <div className="card-body text-center">
+    //                     <h6 className="text-muted mb-2">Total Hôtels</h6>
+    //                     <h3 className={`text-${PRIMARY_COLOR_CLASS} fw-bold`}>{total}</h3>
+    //                 </div>
+    //             </div>
+    //         </div>
+    //         <div className="col-md-3 col-6 mb-3">
+    //             <div className="card border-0 shadow-sm">
+    //                 <div className="card-body text-center">
+    //                     <h6 className="text-muted mb-2">Hôtels Filtrés</h6>
+    //                     <h3 className="text-info fw-bold">{filtered}</h3>
+    //                 </div>
+    //             </div>
+    //         </div>
+    //         <div className="col-md-3 col-6 mb-3">
+    //             <div className="card border-0 shadow-sm">
+    //                 <div className="card-body text-center">
+    //                     <h6 className="text-muted mb-2">Note Moyenne</h6>
+    //                     <h3 className="text-warning fw-bold">{averageRating} ⭐</h3>
+    //                 </div>
+    //             </div>
+    //         </div>
+    //         <div className="col-md-3 col-6 mb-3">
+    //             <div className="card border-0 shadow-sm">
+    //                 <div className="card-body text-center">
+    //                     <h6 className="text-muted mb-2">Chambres Total</h6>
+    //                     <h3 className="text-success fw-bold">{totalRooms}</h3>
+    //                 </div>
+    //             </div>
+    //         </div>
+    //     </div>
+    // );
+}
+
+/**
  * 🏨 Composant Modal générique simple pour Bootstrap.
  */
 function SimpleModal({ title, show, onClose, children }) {
@@ -122,7 +359,6 @@ function SimpleModal({ title, show, onClose, children }) {
         </div>
     );
 }
-
 
 /**
  * 📝 Composant de formulaire pour ajouter un nouvel hôtel (Intégré dans le Modal).
@@ -232,8 +468,19 @@ function AddHotelForm({ onAddHotel, clearNotification, onCloseModal }) {
 export default function HotelListPage({ hotels, onAddHotel, notification, clearNotification }) {
     
     const [showModal, setShowModal] = useState(false);
-    const handleCloseModal = () => setShowModal(false);
-    const sortedHotels = [...hotels].sort((a, b) => (new Date(b.created_at || b.id)) - (new Date(a.created_at || a.id)));
+    const [searchTerm, setSearchTerm] = useState('');
+    const [showFilters, setShowFilters] = useState(false);
+    const [filters, setFilters] = useState({
+        selectedCities: [],
+        selectedCountries: [],
+        minRating: 0,
+        sortBy: 'newest',
+        allHotels: hotels
+    });
+
+    const handleSearch = (term) => {
+        setSearchTerm(term);
+    };
 
     // Fonction pour obtenir la note et le style (légèrement ajustée pour le vert)
     const getRatingInfo = (rating) => {
@@ -254,11 +501,92 @@ export default function HotelListPage({ hotels, onAddHotel, notification, clearN
         return { badgeClass, ratingText };
     };
 
+    // Filtrer et trier les hôtels
+    const filteredHotels = useMemo(() => {
+        let result = [...hotels];
+
+        // Recherche textuelle
+        if (searchTerm.trim()) {
+            const term = searchTerm.toLowerCase();
+            result = result.filter(hotel =>
+                hotel.name.toLowerCase().includes(term) ||
+                hotel.city.toLowerCase().includes(term) ||
+                hotel.country.toLowerCase().includes(term) ||
+                (hotel.description && hotel.description.toLowerCase().includes(term))
+            );
+        }
+
+        // Filtre par villes
+        if (filters.selectedCities.length > 0) {
+            result = result.filter(hotel => 
+                filters.selectedCities.includes(hotel.city)
+            );
+        }
+
+        // Filtre par pays
+        if (filters.selectedCountries.length > 0) {
+            result = result.filter(hotel => 
+                filters.selectedCountries.includes(hotel.country)
+            );
+        }
+
+        // Filtre par note minimale
+        if (filters.minRating > 0) {
+            result = result.filter(hotel => 
+                hotel.rating >= filters.minRating
+            );
+        }
+
+        // Trier les résultats
+        switch (filters.sortBy) {
+            case 'newest':
+                result.sort((a, b) => new Date(b.created_at || b.id) - new Date(a.created_at || a.id));
+                break;
+            case 'name_asc':
+                result.sort((a, b) => a.name.localeCompare(b.name));
+                break;
+            case 'name_desc':
+                result.sort((a, b) => b.name.localeCompare(a.name));
+                break;
+            case 'rating_desc':
+                result.sort((a, b) => b.rating - a.rating);
+                break;
+            case 'rooms_desc':
+                result.sort((a, b) => b.rooms_count - a.rooms_count);
+                break;
+        }
+
+        return result;
+    }, [hotels, searchTerm, filters]);
+
+    const handleClearFilters = () => {
+        setFilters({
+            selectedCities: [],
+            selectedCountries: [],
+            minRating: 0,
+            sortBy: 'newest',
+            allHotels: hotels
+        });
+        setSearchTerm('');
+    };
+
+    const handleCloseModal = () => setShowModal(false);
+
+    // Calcul des statistiques
+    const stats = {
+        total: hotels.length,
+        filtered: filteredHotels.length,
+        averageRating: hotels.length > 0 
+            ? (hotels.reduce((sum, hotel) => sum + hotel.rating, 0) / hotels.length).toFixed(1)
+            : '0.0',
+        totalRooms: hotels.reduce((sum, hotel) => sum + hotel.rooms_count, 0)
+    };
+
     return (
         <div className="container-fluid p-4">
             
             {/* EN-TÊTE DE PAGE */}
-            <div className="d-flex justify-content-between align-items-center mb-5 border-bottom pb-3">
+            <div className="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
                 <h2 className="fw-bolder text-dark">
                     <i className={`fas fa-hotel me-3 text-${ACCENT_COLOR_CLASS}`}></i> 
                     Catalogue des Hôtels
@@ -279,19 +607,84 @@ export default function HotelListPage({ hotels, onAddHotel, notification, clearN
                     <button type="button" className="btn-close" onClick={clearNotification}></button>
                 </div>
             )}
-            
+
+            {/* 🔍 BARRE DE RECHERCHE */}
+            <div className="mb-4">
+                <div className="row align-items-center">
+                    <div className="col-md-8 mb-3 mb-md-0">
+                        <SearchBar onSearch={handleSearch} value={searchTerm} />
+                    </div>
+                    <div className="col-md-4 d-flex justify-content-end">
+                        <button
+                            className={`btn ${showFilters ? `btn-${PRIMARY_COLOR_CLASS}` : 'btn-outline-secondary'} me-2`}
+                            onClick={() => setShowFilters(!showFilters)}
+                        >
+                            <Filter size={18} className="me-2" />
+                            Filtres
+                            {(filters.selectedCities.length > 0 || filters.selectedCountries.length > 0 || filters.minRating > 0) && (
+                                <span className="badge bg-danger ms-2">
+                                    {filters.selectedCities.length + filters.selectedCountries.length + (filters.minRating > 0 ? 1 : 0)}
+                                </span>
+                            )}
+                        </button>
+                        {(searchTerm || filters.selectedCities.length > 0 || filters.selectedCountries.length > 0 || filters.minRating > 0) && (
+                            <button
+                                className="btn btn-outline-danger"
+                                onClick={handleClearFilters}
+                            >
+                                <X size={18} className="me-2" />
+                                Effacer tout
+                            </button>
+                        )}
+                    </div>
+                </div>
+            </div>
+
+            {/* ⚙️ PANEL DE FILTRES */}
+            {showFilters && (
+                <FiltersPanel
+                    filters={filters}
+                    onFilterChange={setFilters}
+                    onClearFilters={handleClearFilters}
+                />
+            )}
+
+            {/* 📊 STATISTIQUES */}
+            <StatsDisplay {...stats} />
+
             {/* 📸 GRILLE DE CARTES DES HÔTELS */}
             <div className="mb-4">
-                <h3 className="h5 mb-3 text-muted">Aperçu des hotels ({hotels.length})</h3>
+                <div className="d-flex justify-content-between align-items-center mb-3">
+                    <h3 className="h5 mb-0 text-muted">
+                        {searchTerm || filters.selectedCities.length > 0 || filters.selectedCountries.length > 0 || filters.minRating > 0
+                            ? `Hôtels trouvés (${filteredHotels.length}/${hotels.length})`
+                            : `Aperçu des hotels (${hotels.length})`
+                        }
+                    </h3>
+                    {filteredHotels.length > 0 && (
+                        <small className="text-muted">
+                            Tri: {{
+                                'newest': 'Plus récent',
+                                'name_asc': 'Nom A-Z',
+                                'name_desc': 'Nom Z-A',
+                                'rating_desc': 'Note décroissante',
+                                'rooms_desc': 'Chambres décroissantes'
+                            }[filters.sortBy]}
+                        </small>
+                    )}
+                </div>
                 
-                {hotels.length === 0 ? (
+                {filteredHotels.length === 0 ? (
                     <div className={`alert alert-${ACCENT_COLOR_CLASS} text-center shadow-sm text-dark`}>
-                        <i className="fas fa-info-circle me-2"></i>
-                        Aucun hôtel n'a été enregistré. Cliquez sur "Créer un Nouvel Hôtel" pour commencer.
+                        <i className="fas fa-search me-2"></i>
+                        {searchTerm || filters.selectedCities.length > 0 || filters.selectedCountries.length > 0 || filters.minRating > 0
+                            ? "Aucun hôtel ne correspond à vos critères de recherche."
+                            : "Aucun hôtel n'a été enregistré. Cliquez sur 'Créer un Nouvel Hôtel' pour commencer."
+                        }
                     </div>
                 ) : (
                     <div className="row">
-                        {sortedHotels.map(hotel => (
+                        {filteredHotels.map(hotel => (
                             <HotelCard 
                                 key={hotel.id} 
                                 hotel={hotel} 
@@ -304,7 +697,7 @@ export default function HotelListPage({ hotels, onAddHotel, notification, clearN
 
             {/* 🖼️ Modal de Création d'Hôtel */}
             <SimpleModal 
-                title="Enregistrer un Nouvel Établissement Hôtelier" 
+                title="Enregistrer un Nouvel Hôtel" 
                 show={showModal} 
                 onClose={handleCloseModal}
             >
